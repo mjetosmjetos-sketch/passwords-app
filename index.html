@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#185FA5">
 <title>باسوردات</title>
 <style>
-/* استخدمت نفس التنسيقات الخاصة بك مع تحسينات طفيفة للموبايل */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
   --blue: #185FA5; --blue-dark: #0C447C; --blue-light: #E6F1FB;
@@ -45,7 +44,7 @@ body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg)
 .chip { flex-shrink: 0; padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; background: var(--bg); color: var(--text2); }
 .chip.active { background: var(--blue); color: white; }
 
-/* CARD DESIGN */
+/* CONTENT */
 .content { padding: 14px 16px 100px; }
 .pcard { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; border: 1px solid var(--border); }
 .pcard-head { display: flex; align-items: center; gap: 12px; padding: 13px; cursor: pointer; }
@@ -60,11 +59,10 @@ body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg)
 .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; }
 .overlay.open { display: flex; }
 .modal { background: white; border-radius: 20px 20px 0 0; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; }
-.form-input, .form-select { width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid var(--border2); margin-bottom: 12px; }
+.form-input, .form-select { width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid var(--border2); margin-bottom: 12px; font-family: inherit; }
 
-/* UTILS */
-.fab { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; border: none; padding: 15px 32px; border-radius: 30px; font-weight: 700; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 20px; border-radius: 20px; opacity: 0; transition: 0.3s; pointer-events: none; }
+.fab { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; border: none; padding: 15px 32px; border-radius: 30px; font-weight: 700; box-shadow: 0 4px 20px rgba(0,0,0,0.2); cursor: pointer; }
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 20px; border-radius: 20px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1000; }
 .toast.show { opacity: 1; }
 </style>
 </head>
@@ -73,9 +71,9 @@ body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg)
 <div id="lock-screen">
   <div class="lock-icon">🔐</div>
   <h1>باسوردات</h1>
-  <p>أدخل PIN المكون من 4 أرقام للدخول</p>
-  <input type="password" inputmode="numeric" maxlength="6" id="pin-input" placeholder="0000">
-  <div id="lock-error" style="color:#ffcfcf; margin-bottom:10px;"></div>
+  <p>أدخل رمز PIN للدخول</p>
+  <input type="password" inputmode="numeric" maxlength="6" id="pin-input" placeholder="••••">
+  <div id="lock-error" style="color:#ffcfcf; margin-bottom:10px; font-size: 14px;"></div>
   <button id="lock-btn" onclick="unlockApp()">🔓 دخول</button>
 </div>
 
@@ -83,12 +81,12 @@ body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg)
   <div class="topbar">
     <div class="topbar-row">
       <div>
-        <h1>باسورداتي</h1>
+        <h1 style="font-size: 18px;">باسورداتي</h1>
         <div id="count-label" style="font-size:11px; opacity:0.8">جاري التحميل...</div>
       </div>
-      <div style="display:flex; gap:5px;">
+      <div style="display:flex; gap:8px;">
         <button class="topbar-btn" onclick="openBulkModal()">📥 استيراد</button>
-        <button class="topbar-btn" onclick="lockApp()">🔒</button>
+        <button class="topbar-btn" onclick="location.reload()">🔒</button>
       </div>
     </div>
   </div>
@@ -105,7 +103,7 @@ body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg)
 
 <div class="overlay" id="add-modal" onclick="if(event.target===this) closeModal('add-modal')">
   <div class="modal">
-    <h3 id="form-title" style="margin-bottom:15px;">إضافة كلمة مرور</h3>
+    <h3 id="form-title" style="margin-bottom:15px;">إضافة بيانات</h3>
     <input type="hidden" id="edit-id">
     <input class="form-input" id="f-name" placeholder="اسم الموقع (مثلاً: فيسبوك)">
     <input class="form-input" id="f-user" placeholder="الإيميل أو اسم المستخدم">
@@ -130,6 +128,7 @@ body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg)
 <div id="toast" class="toast"></div>
 
 <script>
+// تأكد من وضع رابط الـ EXEC الصحيح هنا
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4PZ_KhvLMepMaLEpkkB6jgDMZzGEnTYiXypVMXMKbBFSzmkGYdPWnT4EWr0P4eyHozQ/exec';
 
 let passwords = [];
@@ -138,32 +137,41 @@ let activeGroup = 'الكل';
 let currentPin = '';
 let openCards = {};
 
-// التحقق من الدخول
 async function unlockApp() {
-  const pin = document.getElementById('pin-input').value;
-  if(pin.length < 4) return alert('الـ PIN ضعيف');
-
+  const pinInput = document.getElementById('pin-input');
   const btn = document.getElementById('lock-btn');
-  btn.disabled = true; btn.textContent = 'تحقق...';
+  const errorDiv = document.getElementById('lock-error');
+  
+  if(pinInput.value.length < 4) {
+    errorDiv.textContent = 'الـ PIN يجب أن يكون 4 أرقام على الأقل';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق...';
+  errorDiv.textContent = '';
 
   try {
-    const res = await fetch(`${SCRIPT_URL}?action=verify&pin=${pin}`);
+    const res = await fetch(`${SCRIPT_URL}?action=verify&pin=${pinInput.value}`);
     const json = await res.json();
 
-    if(json.status === 'ok' || json.status === 'new') {
-      currentPin = pin;
-      passwords = (json.data || []).filter(p => p.id !== '__config__');
+    if(json.status === 'ok') {
+      currentPin = pinInput.value;
+      passwords = json.data || [];
       document.getElementById('lock-screen').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
       document.getElementById('fab-btn').style.display = 'block';
       renderAll();
     } else {
-      document.getElementById('lock-error').textContent = 'خطأ في رمز الـ PIN';
+      errorDiv.textContent = 'رمز PIN غير صحيح';
     }
   } catch(e) {
-    alert('فشل الاتصال بالسيرفر');
+    console.error(e);
+    alert('فشل الاتصال: تأكد من نشر السكريبت كـ Web App متاح للجميع (Anyone)');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔓 دخول';
   }
-  btn.disabled = false; btn.textContent = '🔓 دخول';
 }
 
 function renderAll() {
@@ -179,37 +187,42 @@ function renderGroups() {
   ).join('');
 }
 
-function filterGroup(g) { activeGroup = g; renderAll(); }
+function filterGroup(g) {
+  activeGroup = g;
+  renderAll();
+}
 
 function renderList() {
   const q = document.getElementById('search-input').value.toLowerCase();
   const filtered = passwords.filter(p => {
     const mGroup = activeGroup === 'الكل' || p.group === activeGroup;
-    const mSearch = p.name.toLowerCase().includes(q) || p.username.toLowerCase().includes(q);
+    const mSearch = (p.name || '').toLowerCase().includes(q) || (p.username || '').toLowerCase().includes(q);
     return mGroup && mSearch;
   });
 
   const content = document.getElementById('main-content');
   if(filtered.length === 0) {
-    content.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">لا توجد نتائج</div>';
+    content.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">لا توجد بيانات</div>';
     return;
   }
 
   content.innerHTML = filtered.map(p => `
     <div class="pcard">
       <div class="pcard-head" onclick="toggleCard('${p.id}')">
-        <div class="pcard-icon" style="background:#eee">🔑</div>
+        <div class="pcard-icon" style="background:var(--blue-light); color:var(--blue)">🔑</div>
         <div class="pcard-info">
           <div class="pcard-name">${p.name}</div>
           <div class="pcard-user">${p.username}</div>
         </div>
-        <button class="topbar-btn" style="color:var(--blue)" onclick="event.stopPropagation(); copy('${p.password}')">نسخ</button>
+        <button class="topbar-btn" style="color:var(--blue); background:none; font-weight:bold;" onclick="event.stopPropagation(); copy('${p.password}')">نسخ</button>
       </div>
       <div class="pcard-body ${openCards[p.id]?'open':''}">
-        <p style="font-size:13px; margin-bottom:8px;"><b>كلمة المرور:</b> ${p.password}</p>
+        <p style="font-size:14px; margin-bottom:12px; background:#f9f9f9; padding:8px; border-radius:5px;">
+          <b>كلمة المرور:</b> <span style="font-family:monospace">${p.password}</span>
+        </p>
         <div style="display:flex; gap:10px;">
-          <button class="topbar-btn" style="background:#eef; color:var(--blue); flex:1" onclick="openEdit('${p.id}')">تعديل</button>
-          <button class="topbar-btn" style="background:#fee; color:var(--red); flex:1" onclick="deletePass('${p.id}')">حذف</button>
+          <button class="topbar-btn" style="background:#f0f7ff; color:var(--blue); flex:1; padding:10px;" onclick="openEdit('${p.id}')">تعديل</button>
+          <button class="topbar-btn" style="background:#fff0f0; color:var(--red); flex:1; padding:10px;" onclick="deletePass('${p.id}')">حذف</button>
         </div>
       </div>
     </div>
@@ -222,18 +235,22 @@ function toggleCard(id) {
 }
 
 async function savePassword() {
+  const name = document.getElementById('f-name').value;
+  const pass = document.getElementById('f-pass').value;
+  if(!name || !pass) return alert('يرجى كتابة الاسم وكلمة المرور');
+
   const id = document.getElementById('edit-id').value || Date.now().toString();
+  const action = document.getElementById('edit-id').value ? 'update' : 'add';
+
   const data = {
-    action: document.getElementById('edit-id').value ? 'update' : 'add',
+    action: action,
     id: id,
-    name: document.getElementById('f-name').value,
+    name: name,
     username: document.getElementById('f-user').value,
-    password: document.getElementById('f-pass').value,
+    password: pass,
     group: document.getElementById('f-group').value,
     pin: currentPin
   };
-
-  if(!data.name || !data.password) return alert('أكمل البيانات');
 
   showToast('جاري الحفظ...');
   try {
@@ -242,7 +259,7 @@ async function savePassword() {
       body: new URLSearchParams(data)
     });
     
-    if(data.action === 'add') passwords.push(data);
+    if(action === 'add') passwords.push(data);
     else {
       const idx = passwords.findIndex(x => x.id === id);
       passwords[idx] = data;
@@ -252,12 +269,13 @@ async function savePassword() {
     renderAll();
     showToast('تم الحفظ بنجاح');
   } catch(e) {
-    showToast('خطأ في الحفظ');
+    showToast('خطأ في الاتصال بالسيرفر');
   }
 }
 
 async function deletePass(id) {
-  if(!confirm('هل أنت متأكد؟')) return;
+  if(!confirm('هل أنت متأكد من الحذف؟')) return;
+  showToast('جاري الحذف...');
   try {
     await fetch(SCRIPT_URL, {
       method: 'POST',
@@ -265,12 +283,12 @@ async function deletePass(id) {
     });
     passwords = passwords.filter(p => p.id !== id);
     renderAll();
-    showToast('تم الحذف');
+    showToast('تم الحذف بنجاح');
   } catch(e) { showToast('فشل الحذف'); }
 }
 
-// وظائف المساعدة
 function openAddModal() {
+  document.getElementById('form-title').textContent = 'إضافة بيانات جديدة';
   document.getElementById('edit-id').value = '';
   document.getElementById('f-name').value = '';
   document.getElementById('f-user').value = '';
@@ -282,6 +300,7 @@ function openAddModal() {
 
 function openEdit(id) {
   const p = passwords.find(x => x.id === id);
+  document.getElementById('form-title').textContent = 'تعديل البيانات';
   document.getElementById('edit-id').value = p.id;
   document.getElementById('f-name').value = p.name;
   document.getElementById('f-user').value = p.username;
@@ -291,21 +310,26 @@ function openEdit(id) {
   document.getElementById('add-modal').classList.add('open');
 }
 
-function openBulkModal() { document.getElementById('bulk-modal').classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openBulkModal() {
+  document.getElementById('bulk-input').value = '';
+  document.getElementById('bulk-modal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
 
 function copy(txt) {
   navigator.clipboard.writeText(txt);
-  showToast('تم نسخ كلمة المرور');
+  showToast('تم النسخ إلى الحافظة');
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
-
-function lockApp() { location.reload(); }
 </script>
 </body>
 </html>
