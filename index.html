@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#185FA5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="باسوردات">
+<title>باسوردات</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --blue: #185FA5; --blue-dark: #0C447C; --blue-light: #E6F1FB;
+  --red: #c0392b; --bg: #F4F6F9; --card: #ffffff;
+  --text: #1a1a2e; --text2: #6b7280; --text3: #9ca3af;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
+  --radius: 14px; --radius-sm: 8px; --shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LOCK */
+#lock-screen {
+  position: fixed; inset: 0; background: var(--blue); display: flex;
+  flex-direction: column; align-items: center; justify-content: center;
+  z-index: 1000; padding: 32px;
+}
+.lock-icon { font-size: 64px; margin-bottom: 16px; }
+#lock-screen h1 { color: white; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+#lock-screen p { color: rgba(255,255,255,0.75); font-size: 14px; margin-bottom: 28px; text-align: center; line-height: 1.5; }
+#pin-input {
+  width: 100%; padding: 14px 16px; border-radius: var(--radius);
+  border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15);
+  color: white; font-size: 22px; text-align: center; letter-spacing: 6px;
+  margin-bottom: 14px; outline: none;
+}
+#pin-input::placeholder { letter-spacing: 0; color: rgba(255,255,255,0.5); font-size: 14px; }
+#pin-input:focus { border-color: rgba(255,255,255,0.8); }
+#lock-btn {
+  width: 100%; padding: 14px; border-radius: var(--radius); border: none;
+  background: white; color: var(--blue); font-size: 16px; font-weight: 700; cursor: pointer;
+}
+#lock-btn:disabled { opacity: 0.6; }
+#lock-error { color: #ffd6d6; font-size: 13px; margin-top: 8px; min-height: 20px; text-align: center; }
+#lock-hint { color: rgba(255,255,255,0.55); font-size: 12px; margin-top: 10px; text-align: center; line-height: 1.6; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--blue); color: white; padding: 16px 16px 10px;
+  position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(24,95,165,0.3);
+}
+.topbar-row { display: flex; align-items: center; justify-content: space-between; }
+.topbar h1 { font-size: 20px; font-weight: 700; }
+.topbar-sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+.topbar-btn {
+  background: rgba(255,255,255,0.2); border: none; color: white;
+  padding: 7px 12px; border-radius: 20px; font-size: 13px; cursor: pointer;
+}
+.sync-status { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+
+/* SEARCH */
+.search-wrap { background: white; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.search-wrap input {
+  width: 100%; padding: 10px 14px; border-radius: 25px;
+  border: 1px solid var(--border2); background: var(--bg);
+  color: var(--text); font-size: 14px; text-align: right; outline: none;
+}
+.search-wrap input:focus { border-color: var(--blue); background: white; }
+
+/* CHIPS */
+.chips-wrap {
+  display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto;
+  background: white; border-bottom: 1px solid var(--border); scrollbar-width: none;
+}
+.chips-wrap::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; padding: 6px 16px; border-radius: 20px; font-size: 13px;
+  cursor: pointer; border: 1px solid var(--border2); background: var(--bg); color: var(--text2); transition: all 0.15s;
+}
+.chip.active { background: var(--blue); color: white; border-color: var(--blue); font-weight: 600; }
+
+/* CONTENT */
+.content { padding: 14px 16px 100px; }
+.section-title { font-size: 11px; color: var(--text3); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 8px 0 8px; }
+
+/* CARD */
+.pcard { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; border: 1px solid var(--border); }
+.pcard-head { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; }
+.pcard-icon { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.pcard-info { flex: 1; min-width: 0; }
+.pcard-name { font-size: 15px; font-weight: 600; }
+.pcard-user { font-size: 12px; color: var(--text2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard-copy { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+.pcard-copy:active { transform: scale(0.9); }
+.pcard-body { border-top: 1px solid var(--border); padding: 14px; display: none; }
+.pcard-body.open { display: block; }
+.field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.field-lbl { font-size: 12px; color: var(--text3); width: 60px; flex-shrink: 0; font-weight: 600; }
+.field-val { flex: 1; font-size: 13px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field-val.plain { font-family: inherit; }
+.mini-btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; border: 1px solid var(--border2); background: white; color: var(--text2); cursor: pointer; flex-shrink: 0; }
+.share-row { display: flex; gap: 8px; margin-top: 12px; }
+.share-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.btn-wa { background: #25D366; color: white; }
+.btn-fb { background: #0084FF; color: white; }
+.card-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-edit { flex: 1; padding: 9px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg); color: var(--text2); font-size: 13px; cursor: pointer; }
+.btn-del { flex: 1; padding: 9px; border-radius: 8px; border: 1px solid #fbd7d7; background: #fef2f2; color: var(--red); font-size: 13px; cursor: pointer; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--blue); color: white; border: none; padding: 15px 32px;
+  border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(24,95,165,0.4); z-index: 20;
+}
+.fab:active { transform: translateX(-50%) scale(0.96); }
+
+/* MODALS */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: white; border-radius: 20px 20px 0 0; width: 100%; max-height: 88vh; overflow-y: auto; padding: 20px 20px 36px; animation: slideUp 0.25s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.form-label { font-size: 13px; color: var(--text2); font-weight: 600; margin-bottom: 5px; margin-top: 14px; display: block; }
+.form-input { width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border2); background: var(--bg); color: var(--text); font-size: 15px; text-align: right; outline: none; }
+.form-input:focus { border-color: var(--blue); background: white; }
+.form-select { width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border2); background: var(--bg); color: var(--text); font-size: 15px; text-align: right; outline: none; }
+.pass-wrap { position: relative; }
+.pass-wrap .form-input { padding-left: 40px; }
+.pass-eye { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; }
+.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+.btn-main { flex: 1; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--blue); color: white; font-size: 16px; font-weight: 700; cursor: pointer; }
+.btn-main:disabled { opacity: 0.6; }
+.btn-cancel { padding: 13px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg); color: var(--text2); font-size: 16px; cursor: pointer; }
+.grp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.grp-chip-item { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border2); background: var(--bg); font-size: 13px; color: var(--text2); }
+.grp-chip-del { color: var(--red); cursor: pointer; font-weight: 700; font-size: 15px; }
+.add-grp-row { display: flex; gap: 8px; margin-top: 12px; }
+.add-grp-row .form-input { flex: 1; }
+.btn-add-grp { padding: 12px 16px; border-radius: var(--radius-sm); border: none; background: var(--blue); color: white; font-size: 15px; cursor: pointer; flex-shrink: 0; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 10px 22px; border-radius: 25px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 40px auto 12px; display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 50px 20px; color: var(--text3); font-size: 15px; }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-icon">🔐</div>
+  <h1>باسوردات</h1>
+  <p id="lock-desc">أدخل الـ PIN للدخول<br><small style="font-size:11px;opacity:0.7">نفس الـ PIN على كل أجهزتك = نفس البيانات</small></p>
+  <input type="password" inputmode="numeric" maxlength="6" id="pin-input" placeholder="أدخل PIN من 4 أرقام" autocomplete="current-password" />
+  <div id="lock-error"></div>
+  <button id="lock-btn" onclick="unlockApp()">🔓 دخول</button>
+  <div id="lock-hint"></div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div>
+        <h1>🔐 باسوردات</h1>
+        <div class="topbar-sub" id="count-label">جاري التحميل...</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="topbar-btn" onclick="openGroupModal()">⚙ جروبات</button>
+        <button class="topbar-btn" onclick="lockApp()">🔒</button>
+      </div>
+    </div>
+    <div class="sync-status" id="sync-status">⟳ جاري المزامنة...</div>
+  </div>
+
+  <div class="search-wrap">
+    <input type="text" placeholder="🔍 ابحث بالاسم أو الإيميل..." id="search-input" oninput="renderList()" />
+  </div>
+
+  <div class="chips-wrap" id="chips-wrap"></div>
+  <div class="content" id="main-content"><div class="spinner"></div></div>
+</div>
+
+<button class="fab" id="fab-btn" onclick="openAddModal()" style="display:none">＋ باسورد جديد</button>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="add-modal" onclick="closeBg(event,'add-modal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="form-title">إضافة باسورد جديد</div>
+    <input type="hidden" id="edit-id" />
+    <label class="form-label">اسم الموقع / التطبيق *</label>
+    <input class="form-input" id="f-name" placeholder="مثلاً: فيسبوك" />
+    <label class="form-label">اسم المستخدم / الإيميل</label>
+    <input class="form-input" id="f-user" placeholder="example@gmail.com" />
+    <label class="form-label">الباسورد *</label>
+    <div class="pass-wrap">
+      <input class="form-input" id="f-pass" type="password" placeholder="••••••••" />
+      <button class="pass-eye" id="pass-eye" onclick="togglePassEye()">👁</button>
+    </div>
+    <label class="form-label">الجروب</label>
+    <select class="form-select" id="f-group"></select>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('add-modal')">إلغاء</button>
+      <button class="btn-main" id="save-btn" onclick="savePassword()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP MODAL -->
+<div class="overlay" id="group-modal" onclick="closeBg(event,'group-modal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙ إدارة الجروبات</div>
+    <div class="grp-chips" id="grp-chips-list"></div>
+    <div class="add-grp-row">
+      <input class="form-input" id="new-grp-input" placeholder="اسم الجروب الجديد..." />
+      <button class="btn-add-grp" onclick="addGroup()">+ إضافة</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-main" onclick="closeModal('group-modal')">تم</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== CONFIG ======
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4PZ_KhvLMepMaLEpkkB6jgDMZzGEnTYiXypVMXMKbBFSzmkGYdPWnT4EWr0P4eyHozQ/exec';
+
+// ====== STATE ======
+let passwords = [];
+let groups = ['عام','فيسبوك','جيميل','بنوك'];
+let activeGroup = 'الكل';
+let openCards = {}, showCards = {};
+let editMode = false;
+let currentPin = '';
+
+// ====== PIN / LOCK ======
+// The PIN is stored ONLY in the Google Sheet row with id="__config__"
+// So the same PIN works on every device — it's verified server-side via Sheets
+
+function initLock() {
+  document.getElementById('lock-hint').innerHTML =
+    '💡 <b style="color:rgba(255,255,255,0.9)">أول مرة؟</b> اختار PIN وادخله — هيتحفظ على Sheets<br>وتقدر تدخل بنفس الـ PIN من أي جهاز';
+  document.getElementById('pin-input').addEventListener('keydown', e => { if(e.key==='Enter') unlockApp(); });
+}
+
+async function unlockApp() {
+  const pin = document.getElementById('pin-input').value.trim();
+  const errEl = document.getElementById('lock-error');
+  if (pin.length < 4) { errEl.textContent = '⚠ الـ PIN لازم يكون 4 أرقام على الأقل'; return; }
+
+  const btn = document.getElementById('lock-btn');
+  btn.textContent = '...جاري التحقق'; btn.disabled = true;
+  errEl.textContent = '';
+
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=verify&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
+    const json = await res.json();
+
+    if (json.status === 'new') {
+      // First time — save pin to sheets
+      await fetch(SCRIPT_URL + '?action=setpin&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
+      currentPin = pin;
+      showMainApp(json.data || []);
+    } else if (json.status === 'ok') {
+      currentPin = pin;
+      showMainApp(json.data || []);
+    } else {
+      errEl.textContent = '❌ الـ PIN غلط! حاول تاني';
+      document.getElementById('pin-input').value = '';
+    }
+  } catch(e) {
+    errEl.textContent = '⚠ مش قادر يتصل بالسيرفر — تأكد من الإنترنت';
+  }
+
+  btn.textContent = '🔓 دخول'; btn.disabled = false;
+}
+
+function showMainApp(data) {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('fab-btn').style.display = 'flex';
+  passwords = data.filter(r => r.id && r.id !== '__config__');
+  cacheGroups(passwords);
+  renderAll();
+  setSyncStatus('✓ تم التحميل من Google Sheets');
+}
+
+function lockApp() {
+  currentPin = '';
+  document.getElementById('lock-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('fab-btn').style.display = 'none';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('lock-error').textContent = '';
+  passwords = []; openCards = {}; showCards = {};
+}
+
+function cacheGroups(data) {
+  // Extract unique groups from loaded passwords + defaults
+  const fromData = [...new Set(data.map(p => p.group).filter(Boolean))];
+  const defaults = ['عام','فيسبوك','جيميل','بنوك'];
+  groups = [...new Set([...defaults, ...fromData])];
+}
+
+// ====== SYNC STATUS ======
+function setSyncStatus(msg) { document.getElementById('sync-status').textContent = msg; }
+
+// ====== RENDER ======
+const ICONS = [
+  ['فيس','📘','#E8F0FE'],['جيميل','📧','#FCE8E6'],['gmail','📧','#FCE8E6'],
+  ['انستا','📷','#F9E8F7'],['تويتر','🐦','#E8F5FD'],['واتس','💬','#E8F8EE'],
+  ['يوتيوب','▶','#FCE8E8'],['youtube','▶','#FCE8E8'],['امازون','🛒','#FEF3E2'],
+  ['نتفليكس','🎬','#FCE8E8'],['بنك','🏦','#E8EFF9'],['bank','🏦','#E8EFF9'],
+  ['باي','💳','#EAF4FB'],['تيك','🎵','#E8E8FC'],['لينكد','💼','#E8F0F9'],
+  ['تويتش','🎮','#F0E8FC'],['ابل','🍎','#F5F5F5'],['مايكروسوفت','🪟','#E8F0FE'],
+];
+function getIcon(name) {
+  const n = (name||'').toLowerCase();
+  for (let [k,icon,bg] of ICONS) { if(n.includes(k)) return {icon,bg}; }
+  return {icon:'🔑', bg:'#F1EFE8'};
+}
+
+function renderAll() {
+  renderGroups(); renderList();
+  document.getElementById('count-label').textContent = `${passwords.length} باسورد محفوظ`;
+}
+
+function renderGroups() {
+  const el = document.getElementById('chips-wrap');
+  el.innerHTML = ['الكل',...groups].map(g =>
+    `<div class="chip${g===activeGroup?' active':''}" onclick="setGroup('${esc(g)}')">${g}</div>`
+  ).join('');
+}
+
+function setGroup(g) { activeGroup = g; renderGroups(); renderList(); }
+
+function getFiltered() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  return passwords.filter(p => {
+    const mg = activeGroup==='الكل' || p.group===activeGroup;
+    const mq = !q || (p.name||'').toLowerCase().includes(q) || (p.username||'').toLowerCase().includes(q);
+    return mg && mq;
+  });
+}
+
+function renderList() {
+  const list = getFiltered();
+  const el = document.getElementById('main-content');
+  if (!list.length) { el.innerHTML = '<div class="empty">لا يوجد باسوردات<br>اضغط + للإضافة</div>'; return; }
+
+  const byGrp = {};
+  list.forEach(p => { const g = p.group||'عام'; if(!byGrp[g]) byGrp[g]=[]; byGrp[g].push(p); });
+
+  let html = '';
+  for (let grp in byGrp) {
+    if (activeGroup==='الكل') html += `<div class="section-title">${grp}</div>`;
+    byGrp[grp].forEach(p => {
+      const {icon,bg} = getIcon(p.name);
+      const isOpen = openCards[p.id];
+      const masked = showCards[p.id] ? p.password : '••••••••';
+      html += `<div class="pcard">
+        <div class="pcard-head" onclick="toggleCard('${p.id}')">
+          <div class="pcard-icon" style="background:${bg}">${icon}</div>
+          <div class="pcard-info">
+            <div class="pcard-name">${escH(p.name||'')}</div>
+            <div class="pcard-user">${escH(p.username||'')}</div>
+          </div>
+          <div class="pcard-copy" onclick="event.stopPropagation();copyTxt('${esc(p.password||'')}')">📋</div>
+        </div>
+        ${isOpen ? `<div class="pcard-body open">
+          <div class="field-row">
+            <div class="field-lbl">الإيميل</div>
+            <div class="field-val plain">${escH(p.username||'')}</div>
+            <button class="mini-btn" onclick="copyTxt('${esc(p.username||'')}')">نسخ</button>
+          </div>
+          <div class="field-row">
+            <div class="field-lbl">الباسورد</div>
+            <div class="field-val">${masked}</div>
+            <button class="mini-btn" onclick="toggleShow('${p.id}')">${showCards[p.id]?'إخفاء':'إظهار'}</button>
+            <button class="mini-btn" onclick="copyTxt('${esc(p.password||'')}')">نسخ</button>
+          </div>
+          <div class="share-row">
+            <button class="share-btn btn-wa" onclick="shareWA('${p.id}')">💬 واتساب</button>
+            <button class="share-btn btn-fb" onclick="shareFB('${p.id}')">📘 مسنجر</button>
+          </div>
+          <div class="card-actions">
+            <button class="btn-edit" onclick="openEdit('${p.id}')">✏ تعديل</button>
+            <button class="btn-del" onclick="deletePass('${p.id}')">🗑 حذف</button>
+          </div>
+        </div>` : ''}
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+}
+
+function toggleCard(id) { openCards[id]=!openCards[id]; renderList(); }
+function toggleShow(id) { showCards[id]=!showCards[id]; renderList(); }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+// ====== COPY / SHARE ======
+function copyTxt(txt) {
+  if (navigator.clipboard) { navigator.clipboard.writeText(txt); }
+  else { const t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); }
+  showToast('✓ تم النسخ!');
+}
+function shareWA(id) {
+  const p = passwords.find(x=>String(x.id)===String(id)); if(!p) return;
+  const msg = `🔐 بيانات الدخول:\n📌 ${p.name}\n👤 ${p.username||''}\n🔑 ${p.password}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg));
+}
+function shareFB(id) {
+  const p = passwords.find(x=>String(x.id)===String(id)); if(!p) return;
+  const msg = `🔐 ${p.name} | ${p.username||''} | ${p.password}`;
+  window.open('fb-messenger://share/?text='+encodeURIComponent(msg));
+}
+
+// ====== ADD / EDIT ======
+function openAddModal() {
+  editMode=false;
+  document.getElementById('form-title').textContent='إضافة باسورد جديد';
+  document.getElementById('save-btn').textContent='حفظ';
+  document.getElementById('edit-id').value='';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-user').value='';
+  document.getElementById('f-pass').value='';
+  document.getElementById('f-pass').type='password';
+  document.getElementById('pass-eye').textContent='👁';
+  fillGroupSel('');
+  document.getElementById('add-modal').classList.add('open');
+}
+function openEdit(id) {
+  const p=passwords.find(x=>String(x.id)===String(id)); if(!p) return;
+  editMode=true;
+  document.getElementById('form-title').textContent='تعديل الباسورد';
+  document.getElementById('save-btn').textContent='حفظ التعديل';
+  document.getElementById('edit-id').value=p.id;
+  document.getElementById('f-name').value=p.name||'';
+  document.getElementById('f-user').value=p.username||'';
+  document.getElementById('f-pass').value=p.password||'';
+  document.getElementById('f-pass').type='text';
+  fillGroupSel(p.group||'');
+  document.getElementById('add-modal').classList.add('open');
+}
+function fillGroupSel(sel) {
+  document.getElementById('f-group').innerHTML = groups.map(g =>
+    `<option value="${g}"${g===sel?' selected':''}>${g}</option>`).join('');
+  if (!sel && activeGroup!=='الكل') document.getElementById('f-group').value=activeGroup;
+}
+function togglePassEye() {
+  const i=document.getElementById('f-pass'), e=document.getElementById('pass-eye');
+  i.type=i.type==='password'?'text':'password'; e.textContent=i.type==='password'?'👁':'🙈';
+}
+async function savePassword() {
+  const name=document.getElementById('f-name').value.trim();
+  const user=document.getElementById('f-user').value.trim();
+  const pass=document.getElementById('f-pass').value.trim();
+  const group=document.getElementById('f-group').value;
+  const editId=document.getElementById('edit-id').value;
+  if (!name) { showToast('⚠ اكتب اسم التطبيق'); return; }
+  if (!pass) { showToast('⚠ اكتب الباسورد'); return; }
+
+  const btn=document.getElementById('save-btn');
+  btn.textContent='...جاري الحفظ'; btn.disabled=true;
+  setSyncStatus('⟳ جاري الحفظ...');
+
+  try {
+    if (editMode && editId) {
+      const payload={action:'update',id:editId,name,username:user,password:pass,group};
+      await postToSheets(payload);
+      const idx=passwords.findIndex(x=>String(x.id)===String(editId));
+      if(idx>=0) passwords[idx]={id:editId,name,username:user,password:pass,group};
+      showToast('✓ تم التعديل!');
+    } else {
+      const id=Date.now().toString();
+      await postToSheets({action:'add',id,name,username:user,password:pass,group});
+      passwords.push({id,name,username:user,password:pass,group});
+      showToast('✓ تم الحفظ!');
+    }
+    closeModal('add-modal');
+    renderAll();
+    setSyncStatus('✓ محفوظ على Google Sheets');
+  } catch(e) {
+    showToast('⚠ خطأ في الحفظ — تأكد من الإنترنت');
+    setSyncStatus('⚠ فشل الحفظ');
+  }
+  btn.textContent=editMode?'حفظ التعديل':'حفظ'; btn.disabled=false;
+}
+async function deletePass(id) {
+  if(!confirm('تأكيد حذف الباسورد؟')) return;
+  setSyncStatus('⟳ جاري الحذف...');
+  try {
+    await postToSheets({action:'delete',id});
+    passwords=passwords.filter(p=>String(p.id)!==String(id));
+    delete openCards[id]; delete showCards[id];
+    renderAll();
+    setSyncStatus('✓ تم الحذف');
+    showToast('✓ تم الحذف');
+  } catch(e) { showToast('⚠ خطأ في الحذف'); }
+}
+
+async function postToSheets(payload) {
+  await fetch(SCRIPT_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+}
+
+// ====== GROUPS ======
+function openGroupModal() { renderGrpChips(); document.getElementById('group-modal').classList.add('open'); }
+function renderGrpChips() {
+  document.getElementById('grp-chips-list').innerHTML = groups.map(g =>
+    `<div class="grp-chip-item">${g}<span class="grp-chip-del" onclick="delGroup('${esc(g)}')">✕</span></div>`
+  ).join('');
+}
+function addGroup() {
+  const val=document.getElementById('new-grp-input').value.trim();
+  if(!val||groups.includes(val)) { showToast('⚠ اسم موجود أو فارغ'); return; }
+  groups.push(val);
+  document.getElementById('new-grp-input').value='';
+  renderGrpChips(); renderGroups(); showToast('✓ تم إضافة الجروب');
+}
+function delGroup(g) {
+  if(passwords.some(p=>p.group===g)) { showToast('⚠ فيه باسوردات في الجروب ده'); return; }
+  groups=groups.filter(x=>x!==g);
+  if(activeGroup===g) activeGroup='الكل';
+  renderGrpChips(); renderGroups(); renderList();
+}
+
+// ====== UTILS ======
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeBg(e,id) { if(e.target.id===id) closeModal(id); }
+let toastT;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ====== INIT ======
+initLock();
+document.getElementById('pin-input').focus();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}</script>
+</body>
+</html>
