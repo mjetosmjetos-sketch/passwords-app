@@ -1,220 +1,101 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#185FA5">
-<title>باسوردات</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root {
-  --blue: #185FA5; --blue-dark: #0C447C; --blue-light: #E6F1FB;
-  --red: #c0392b; --bg: #F4F6F9; --card: #ffffff;
-  --text: #1a1a2e; --text2: #6b7280; --text3: #9ca3af;
-  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
-  --radius: 14px; --radius-sm: 8px; --shadow: 0 2px 12px rgba(0,0,0,0.07);
-}
-body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+// ===== انسخ الكود ده كله والصقه في Apps Script =====
 
-/* LOCK SCREEN */
-#lock-screen {
-  position: fixed; inset: 0; background: var(--blue); display: flex;
-  flex-direction: column; align-items: center; justify-content: center;
-  z-index: 1000; padding: 32px;
-}
-.lock-icon { font-size: 64px; margin-bottom: 16px; }
-#lock-screen h1 { color: white; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-#lock-screen p { color: rgba(255,255,255,0.75); font-size: 14px; margin-bottom: 28px; text-align: center; line-height: 1.5; }
-#pin-input {
-  width: 100%; max-width: 300px; padding: 14px 16px; border-radius: var(--radius);
-  border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15);
-  color: white; font-size: 22px; text-align: center; letter-spacing: 6px; margin-bottom: 14px; outline: none;
-}
-#lock-btn { width: 100%; max-width: 300px; padding: 14px; border-radius: var(--radius); border: none; background: white; color: var(--blue); font-size: 16px; font-weight: 700; cursor: pointer; }
-#lock-error { color: #ffd6d6; font-size: 13px; margin-top: 8px; min-height: 20px; text-align: center; }
+function doGet(e) {
+  const action = e.parameter.action || 'load';
+  const pin = e.parameter.pin || '';
 
-/* TOPBAR */
-.topbar { background: var(--blue); color: white; padding: 16px 16px 10px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(24,95,165,0.3); }
-.topbar-row { display: flex; align-items: center; justify-content: space-between; }
-.topbar h1 { font-size: 20px; font-weight: 700; }
-.topbar-sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
-.topbar-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 7px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; }
-.sync-status { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 3px; }
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-/* SEARCH & CHIPS */
-.search-wrap { background: white; padding: 10px 16px; border-bottom: 1px solid var(--border); }
-.search-wrap input { width: 100%; padding: 10px 14px; border-radius: 25px; border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-size: 14px; text-align: right; outline: none; }
-.chips-wrap { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; }
-.chip { flex-shrink: 0; padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1px solid var(--border2); background: var(--bg); color: var(--text2); }
-.chip.active { background: var(--blue); color: white; border-color: var(--blue); font-weight: 600; }
+  if (action === 'verify' || action === 'setpin') {
+    // Find config row
+    const data = sheet.getDataRange().getValues();
+    let configRow = -1;
+    let savedPin = '';
 
-/* CARDS */
-.content { padding: 14px 16px 100px; }
-.pcard { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; border: 1px solid var(--border); }
-.pcard-head { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; }
-.pcard-icon { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.pcard-info { flex: 1; min-width: 0; }
-.pcard-name { font-size: 15px; font-weight: 600; }
-.pcard-user { font-size: 12px; color: var(--text2); margin-top: 2px; }
-.pcard-body { border-top: 1px solid var(--border); padding: 14px; display: none; }
-.pcard-body.open { display: block; }
-.field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-.field-val { flex: 1; font-size: 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-family: monospace; overflow: hidden; }
-
-/* MODALS */
-.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
-.overlay.open { display: flex; }
-.modal { background: white; border-radius: 20px 20px 0 0; width: 100%; max-height: 88vh; overflow-y: auto; padding: 20px 20px 36px; animation: slideUp 0.25s ease; }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.form-input, .form-select { width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid var(--border2); background: var(--bg); margin-bottom: 12px; outline: none; text-align: right; }
-
-.fab { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--blue); color: white; border: none; padding: 15px 32px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 20; }
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: white; padding: 10px 22px; border-radius: 25px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
-.toast.show { opacity: 1; }
-.spinner { width: 36px; height: 36px; border: 3px solid var(--border2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 40px auto; }
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
-</head>
-<body>
-
-<div id="lock-screen">
-  <div class="lock-icon">🔐</div>
-  <h1>باسوردات</h1>
-  <p>أدخل الـ PIN للدخول</p>
-  <input type="password" inputmode="numeric" maxlength="6" id="pin-input" placeholder="••••">
-  <div id="lock-error"></div>
-  <button id="lock-btn" onclick="unlockApp()">🔓 دخول</button>
-</div>
-
-<div id="main-app" style="display:none">
-  <div class="topbar">
-    <div class="topbar-row">
-      <div>
-        <h1>🔐 باسوردات</h1>
-        <div class="topbar-sub" id="count-label">جاري التحميل...</div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="topbar-btn" onclick="openBulkModal()">📥 إضافة جماعية</button>
-        <button class="topbar-btn" onclick="lockApp()">🔒</button>
-      </div>
-    </div>
-    <div class="sync-status" id="sync-status">✓ متصل</div>
-  </div>
-
-  <div class="search-wrap">
-    <input type="text" placeholder="🔍 ابحث بالاسم أو الإيميل..." id="search-input" oninput="renderList()" />
-  </div>
-
-  <div class="chips-wrap" id="chips-wrap"></div>
-  <div class="content" id="main-content"><div class="spinner"></div></div>
-</div>
-
-<button class="fab" id="fab-btn" onclick="openAddModal()" style="display:none">＋ باسورد جديد</button>
-
-<div class="overlay" id="add-modal" onclick="if(event.target===this) closeModal('add-modal')">
-  <div class="modal">
-    <h3 id="form-title" style="margin-bottom:15px">إضافة باسورد جديد</h3>
-    <input type="hidden" id="edit-id" />
-    <input class="form-input" id="f-name" placeholder="اسم الموقع / التطبيق *" />
-    <input class="form-input" id="f-user" placeholder="اسم المستخدم / الإيميل" />
-    <input class="form-input" id="f-pass" placeholder="الباسورد *" />
-    <select class="form-select" id="f-group"></select>
-    <div style="display:flex; gap:10px; margin-top:10px">
-      <button class="topbar-btn" style="background:var(--blue); flex:1; padding:13px; border-radius:8px" id="save-btn" onclick="savePassword()">حفظ</button>
-      <button class="topbar-btn" style="background:#eee; color:#333; flex:1; border-radius:8px" onclick="closeModal('add-modal')">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast" class="toast"></div>
-
-<script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqrDk73ZEORDc1DjdXSkLoS8jMyvV2Ws7KUYDVhuILLRkWP3ZPOOgMJNMt7C4FZnedoA/exec';
-
-let passwords = [];
-let groups = ['عام','فيسبوك','جيميل','بنوك'];
-let activeGroup = 'الكل';
-let openCards = {}, showCards = {};
-let currentPin = '';
-
-async function unlockApp() {
-  const pin = document.getElementById('pin-input').value.trim();
-  const errEl = document.getElementById('lock-error');
-  if (pin.length < 4) { errEl.textContent = '⚠ PIN لازم 4 أرقام'; return; }
-
-  const btn = document.getElementById('lock-btn');
-  btn.textContent = '...جاري التحقق'; btn.disabled = true;
-
-  try {
-    const res = await fetch(SCRIPT_URL + '?action=verify&pin=' + encodeURIComponent(pin));
-    const json = await res.json();
-
-    if (json.status === 'ok' || json.status === 'new') {
-      currentPin = pin;
-      passwords = (json.data || []).filter(r => r.id && r.id !== '__config__');
-      document.getElementById('lock-screen').style.display = 'none';
-      document.getElementById('main-app').style.display = 'block';
-      document.getElementById('fab-btn').style.display = 'flex';
-      setSyncStatus('✓ تم الاتصال بنجاح');
-      renderAll();
-    } else {
-      errEl.textContent = '❌ PIN غلط';
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === '__config__') {
+        configRow = i + 1;
+        savedPin = String(data[i][1]);
+        break;
+      }
     }
-  } catch (e) {
-    errEl.textContent = '⚠ مشكلة في الاتصال';
+
+    if (action === 'setpin') {
+      // First time setup — save PIN
+      if (configRow === -1) {
+        sheet.appendRow(['__config__', pin, '', '', '']);
+      } else {
+        sheet.getRange(configRow, 2).setValue(pin);
+      }
+      return jsonResponse({ status: 'ok', data: [] });
+    }
+
+    // action === 'verify'
+    if (configRow === -1 || savedPin === '') {
+      // No PIN set yet — treat as new user
+      const rows = getPasswords(sheet);
+      return jsonResponse({ status: 'new', data: rows });
+    }
+
+    if (pin === savedPin) {
+      const rows = getPasswords(sheet);
+      return jsonResponse({ status: 'ok', data: rows });
+    } else {
+      return jsonResponse({ status: 'wrong' });
+    }
   }
-  btn.textContent = '🔓 دخول'; btn.disabled = false;
+
+  // Default load
+  const rows = getPasswords(sheet);
+  return jsonResponse({ status: 'ok', data: rows });
 }
 
-function renderAll() {
-  const fromData = [...new Set(passwords.map(p => p.group).filter(Boolean))];
-  groups = [...new Set(['عام','فيسبوك','جيميل','بنوك', ...fromData])];
-  
-  const chips = document.getElementById('chips-wrap');
-  chips.innerHTML = ['الكل',...groups].map(g => `<div class="chip${g===activeGroup?' active':''}" onclick="setGroup('${g}')">${g}</div>`).join('');
-  
-  renderList();
-  document.getElementById('count-label').textContent = `${passwords.length} باسورد محفوظ`;
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const payload = JSON.parse(e.postData.contents);
+
+  if (payload.action === 'add') {
+    sheet.appendRow([payload.id, payload.name, payload.username, payload.password, payload.group]);
+
+  } else if (payload.action === 'delete') {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(payload.id)) {
+        sheet.deleteRow(i + 1);
+        break;
+      }
+    }
+
+  } else if (payload.action === 'update') {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(payload.id)) {
+        sheet.getRange(i + 1, 1, 1, 5).setValues([[
+          payload.id, payload.name, payload.username, payload.password, payload.group
+        ]]);
+        break;
+      }
+    }
+  }
+
+  return jsonResponse({ status: 'ok' });
 }
 
-function setGroup(g) { activeGroup = g; renderAll(); }
-
-function renderList() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const filtered = passwords.filter(p => {
-    const mg = activeGroup==='الكل' || p.group===activeGroup;
-    const mq = !q || (p.name||'').toLowerCase().includes(q) || (p.username||'').toLowerCase().includes(q);
-    return mg && mq;
-  });
-
-  const el = document.getElementById('main-content');
-  if (!filtered.length) { el.innerHTML = '<div class="empty" style="text-align:center;padding:50px;color:#999">لا توجد بيانات</div>'; return; }
-
-  el.innerHTML = filtered.map(p => `
-    <div class="pcard">
-      <div class="pcard-head" onclick="toggleCard('${p.id}')">
-        <div class="pcard-icon" style="background:#eee">🔑</div>
-        <div class="pcard-info">
-          <div class="pcard-name">${p.name}</div>
-          <div class="pcard-user">${p.username || ''}</div>
-        </div>
-        <div class="topbar-btn" style="background:var(--blue-light); color:var(--blue)" onclick="event.stopPropagation();copyTxt('${p.password}')">نسخ</div>
-      </div>
-      <div class="pcard-body ${openCards[p.id]?'open':''}">
-        <div class="field-row">
-          <div class="field-val">${p.password}</div>
-        </div>
-        <div style="display:flex; gap:10px">
-          <button class="topbar-btn" style="flex:1; background:#eee; color:#333" onclick="openEdit('${p.id}')">✏ تعديل</button>
-          <button class="topbar-btn" style="flex:1; background:#fee; color:var(--red)" onclick="deletePass('${p.id}')">🗑 حذف</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
+function getPasswords(sheet) {
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  const headers = data[0];
+  return data.slice(1)
+    .filter(row => row[0] && String(row[0]) !== '__config__')
+    .map(row => {
+      let obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    });
 }
 
-async function savePassword() {
-  const name=document.getElementById('f-name').value.trim();
-  const user=document.getElementById('f-user').value.trim();
-  const pass=document.getElementById('f-pass').value.trim();
-  const group=document
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
